@@ -1,0 +1,275 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output:
+  html_document:
+    df_print: paged
+---
+
+## Aula 1 (2018-03-07)
+
+- Entrega da ementa no site
+- Uso de R, RStudio, LaTeX
+- Opcionalmente kite, Ox
+
+- Será usado principalmente o livro *Statistical Computing with R*.
+
+
+## Aula 2 (2018-03-14)
+
+### Geração de Números Pseudo-aleatórios (NPAs)
+
+Aqui abordaremos da geração de números pseudo-aleatórios, ou seja, números gerados computacionalmente.
+
+De um  modo geral uma tarefa é levada a cabo em 2 etapas:
+
+1.	Gera-se observações de v.a.'s $U_1, U_2, U_3, \dotsc, \overset{\text{i.i.d.}}{\sim} U[0, 1]$
+
+2.	Transformações das v.a.'s para obter de distribuições mais complexas.
+
+Existem fundamentalmente duas classes de métodos diferentes para gerar números aleatórios (NA's):
+
+1.	Números aleatórios gerados usando algum fenômeno físico (ex: jogar um dado)
+
+2.	Números pseudo-aleatórios gerados por programas computacionais.
+
+**Definição** (gerador NPA):
+Um gerador NPA é um algoritmo que produz como output uma sequência de números que podem ser usados em substituição a uma sucessão i.i.d. de verdadeiros NA's.
+
+Tendo reconhecido que uma seqência de NPA's é cíclica, Lehmer sugeriu, em 1943, que se usasse a teoria dos números para tentar fazer esse período o mais longo possível.
+Hoje em dia, a quase totalidade dos geradores se baseia nessa ideia.
+
+#### Gerador Congruencial Linear (de Lehmer)
+
+**Algoritmo:**
+
+	input:
+		m > 1
+		a in {1, 2, ..., m - 1} (multiplicativa)
+		c in {0, 1, ..., m - 1} (incremento)
+		X0 in {0, 1, ..., m - 1} (a semente)
+
+	output:
+		X[1], X[2], X[3], ..., a sequência de NPA's
+
+	1: for n = 1, 2, 3, ... do
+	2: X[n] <- (a * X[n - 1] + c) mod m
+	3: output X[n]
+	4: end for
+
+A sequência gerada pelo algoritmo de Lehmer consiste nos inteiros $X_n \in \{0, 1, \dotsc, m - 1 \}$.
+
+O output depende fortemente dos parâmetros $m$, $a$, $x$, $X_0$ (*seed*), caso essas sejam escolhidas adequadamente, temos uma sequência "semelhante" a uma sucessão i.i.d. de v.a.'s uniformes.
+
+**Exemplo:** $m = 8, a = 5, c = 1, X_0 = 0$
+
+	n	5 * Xn + 1	Xn
+	1	1			1
+	2	6			6
+	3	31			7
+	4	36			4
+	5	21			5
+	6	26			2
+	7	11			3
+	8	16			0
+	9	1			1
+	10	6			6
+
+No R, temos o seguinte script:
+
+```{r}
+LCG <- function(n, m, a, c, X0) {
+
+	X <- c()
+	Xn <- X0
+	
+	for (i in 1:n) {
+		Xn <- a * Xn + c %% m
+		X[i] <- Xn
+	}
+	
+	return(X)
+}
+```
+
+```{r}
+m    <- 8
+a    <- 5
+c    <- 1
+seed <- 0
+N    <- 10
+
+X <- numeric()
+Y <- numeric()
+
+X[1] <- seed
+
+for (n in 2:(N + 1)) {
+	X[n] <- LCG(1, m, a, c, X[n - 1])
+	Y[n] <- 5 * X[n - 1] + 1
+	cat(n - 1, 5 * X[n - 1] + 1, X[n], "\n")
+}
+congruencial <- data.frame(n = 1:10, Yn = Y[2:(N + 1)], Xn = X[2:(N + 1)])
+congruencial
+
+```
+
+No exemplo, $X_8 = X_0$ e consequentemente $X_9 = X_1$, $X_{10} = X_2$, e assim sucessivamente.
+
+Dado que $X_n$ pode assumir apenas m valores distintos o output de gerador congruencial começa a repetir depois de $m$ passos, no máximo---é periódico.
+
+Para ultrapassar este problema os valores típicos para $m$ são de ordem de $m = 2^{32} \approx 4 \cdot 10^{9}$.
+
+Os valores de $a$ e $c$, são fixados de forma que os gerador tenha o período máximo $m$.
+
+Podemos obter uma sucessão de NPA's uniformes iid $\sim U[0, 1]$, fazendo $U_n = \frac{X_n}{m}$.
+
+
+#### Qualidade dos NPA's
+
+Os NPA's usados nos pacotes de softwares como o R são mais sofisticados do que o congruencial, mas eles pertilham das seguintes características
+
+1.	A sequência de NPA's gerada depende da semente $X_0$: diferentes sequências obtidas de acordo com a semente, por outro lado, resultados reproduzíveis.
+
+2.	A periodicidade é uma propriedade partilhada por todos os geradores. O comprimento do período é uma medida de qualidade.
+
+3.	Um outro problema diz respeito à independência, já que $X_n$ depende deterministicamente de $X_{n - 1}$.
+
+No R,
+```{r, eval=FALSE}
+u <- runif(n)
+u <- runif(n, a, b)
+set.seed(300)  # fixa a semente, resultados reproduzíveis
+```
+
+Exemplo:
+
+```{r}
+# Lançamento de moedas
+sample(0:1, size = 10, replace = TRUE)
+```
+
+
+#### Método da Transformação Inversa
+
+Trata-se de um método para gerar v.a.'s usando como input os valores NPA's uniformes em $[0, 1]$.
+
+**Teorema:**
+Seja $F_X$ uma função de distribuição (fd).
+Defina-se a inversa generalizada de $F_X$
+$$
+	F_X^{-1}(u) = \inf \{x \in \mathbb{R} \mid F_X(x) \ge u \}, u \in (0, 1)
+$$
+e seja $U \sim U[0, 1]$.
+Define-se
+$$
+	X := F^{-1}(U).
+$$
+Então $X$ tem df $F_X$.
+
+**Prova:**
+\begin{eqnarray}
+	P(X \le x) &= P(F_X^{-1}(U) \le x) \\
+	&= P(U \le F_X(x)) \\
+	&= F_X(x)
+\end{eqnarray}
+
+**Exemplo:**
+Para gerar a v.a. com fdp $f(x) = 3x^2$, $x \in [0, 1]$, basta notar que $x \in [0, 1]$, $F(x) = x^3$, que é invertível, $F^{-1}(u) = u^{1/3}$
+$$
+	P(X \le x) = \int_0^x f(t)\ dt = \int_0^x 3 t^2\ dt = t^3 |_0^x = x^3
+$$
+
+```{r}
+n <- 1000  # tamanho da amostra
+u <- runif(n)
+x <- u ^ (1 / 3)
+
+y <- seq(0, 1, 0.1)
+
+hist(x, prob = TRUE, main = bquote(f(x) == 3 * x ^ 2))
+lines(y, 3 * y ^ 2)
+
+```
+
+**Exemplo (modelo exponencial):**
+Gerar $n$ valores do modelo $F_X(x) = 1 - e^{-\lambda x}$, $x > 0$.
+
+
+```{r}
+n      <- 1000
+lambda <- 0.5
+
+u <- runif(n)
+x <- -log(u) / lambda
+
+hist(x, prob = TRUE)
+```
+
+#### Método da Transformada Inversa - Caso Discreto
+
+Seja $X$ uma v.a. discreta e $\dotsc < x_{i - 1} < x_i < x_{i + 1} < \dotsc$.
+Os pontos de discontinuidade de $F_X(x)$ para cada valor gerado de $X$ faça
+
+1.	gera $u$ do modelo uniforme $U \sim U[0, 1]$;
+
+2.	sair com $x_i$ se $F_X(x_{i - 1}) < u \le F_X(x_i)$.
+
+
+**Exemplo (Bernoulli):**
+Gerar pelo método TI 10 valores do modelo Bernoulli ($p = 0.4$).
+Calcular a média e a variância.
+$$	F_X(0) = 1 - p = 0,6 $$
+$$	F_X(1) = 1 $$
+```{r}
+n <- 10
+p <- 0.4
+
+u <- runif(n)
+u > 0.6
+
+x <- as.integer(u > 0.6)
+x
+
+mean(x)
+var(x)
+```
+
+**Exemplo (Geométrica):**
+fmp: $f_x(x) = (1 - p)^x \cdot p$, $x = 0, 1, 2, \dotsc$
+$$
+	F_X(x) = 1 - (1 - p) ^ {x + 1}
+$$
+1.	Gerar u
+
+2.	x_i se $F_X(x_{i - 1}) < u \le F_X(x_i)$
+
+```{r}
+n <- 1000
+p <- 1 / 4
+u <- runif(n)
+x <- ceiling(log(u) / log(1 - p)) - 1
+x
+plot(table(x) / n)
+```
+
+#### Método de TI - Modelo Logarítmico
+
+Uma v.a. tem fmp
+$$
+	f_X(x) = P(X = x) = \frac{a \theta^x}{x},
+$$
+$x = 1, 2, \dotsc$, $0 < \theta < 1$, $a = -\frac{1}{\log(1 - \theta)}$.
+
+Formas alternativas para a fmp
+$$
+	f_X(x) = \exp(\log(a) + x \log(\theta) - \log(x))
+$$
+
+Algoritmo para gerar:
+
+-	Gerar $N$ valores $x = 1, 2, 3, \dotsc, N$ (elevado).
+	
+-	Para resolver $F_X(x - 1) < u \le F_X(x)$, será necessário contar o número de valores $x$ para os quais $F_X(x - 1) < u$ (para cada $u$).
+Se ``F`` é um vetor e ``ui`` um escalar, então no R, a instrução ``F < ui`` produz um vetor lógico (``TRUE``; ``FALSE``), e ``as.integer(TRUE) -> 1`` e ``as.integer(FALSE) -> 0``.
+
+-	As somas dos valores 1 que indicam no vetor a relalção de ``TRUE`` é exatamente o número dos $x - 1$.
