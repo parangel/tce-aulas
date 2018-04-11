@@ -1,11 +1,10 @@
 ---
 title: "Técnicas Computacionais em Estatística"
-output:
-  html_document:
-    df_print: paged
+output: html_notebook
+date: "14 de Março de 2018"
 ---
 
-## Aula 1 (2018-03-07)
+## Aula 1
 
 - Entrega da ementa no site
 - Uso de R, RStudio, LaTeX
@@ -14,7 +13,7 @@ output:
 - Será usado principalmente o livro *Statistical Computing with R*.
 
 
-## Aula 2 (2018-03-14)
+## Aula 2
 
 ### Geração de Números Pseudo-aleatórios (NPAs)
 

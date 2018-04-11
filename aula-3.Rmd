@@ -1,8 +1,6 @@
 ---
 title: "Técnicas Computacionais em Estatística"
-output:
-  html_document:
-    df_print: paged
+output: html_notebook
 date: "21 de Março de 2018"
 ---
 
@@ -202,9 +200,11 @@ $$ $$
 	= \frac{P(Y \leq x, U \leq \frac{1}{M} \frac{f(Y)}{g(Y)})}{P(U \leq \frac{1}{M} \frac{f(Y)}{g(Y)})}
 $$ $$
 	= \frac{\int_{-\infty}^x \int_0^{\frac{1}{M} \frac{f(Y)}{g(Y)}} du\ g(y)\ dy}{\int_{-\infty}^\infty \int_0^{\frac{1}{M} \frac{f(Y)}{g(Y)}} du\ g(y)\ dy}
-$$ $$
+$$
+$$
 	= \frac{\int_{-\infty}^x \frac{1}{M} \frac{f(Y)}{g(Y)} g(y)\ dy}{\int_{-\infty}^{\infty} \frac{1}{M} \frac{f(Y)}{g(Y)} g(y)\ dy}
-$$ $$
+$$
+$$
 	= \frac{\int_{-\infty}^x f(y)\ dy}{\int_{-\infty}^\infty f(y)\ dy} = P(X \leq x)
 $$
 
