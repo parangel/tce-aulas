@@ -1,0 +1,96 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output: html_notebook
+date: "4 de Abril de 2018"
+---
+
+# Aula 5
+
+## Métodos de Monte Carlo - Aplicações em Inferência
+
+Po exemplo, o valor médio de $\mu = E[X]$ pode ser estimado da seguinte forma:
+
+1. Gerar $N$ amotras independentes do modelo $i = 1, 2, \dotsc, N$
+$$
+  \left( X_1^{(i)}, X_2^{(i)}, \dotsc, X_n^{(i)} \right)
+$$
+
+2. Calcular
+$$
+  T^{(i)} = T\left( X_1^{(i)}, X_2^{(i)}, \dotsc, X_n^{(i)} \right)
+$$
+para $i = 1, \dotsc, N$.
+
+3. Aproximar o valor médio de $T$ por
+$$
+  \mu \approx \hat{\mu} = \bar{T} = \frac{1}{N} \sum_{i = 1}^N T^{(i)}
+$$
+
+Um intervalo de confiança para $\mu = E[T]$ de grau aproximadamente 2 é dado pela relação
+$$
+  P \left[ \bar{T} - z_{1 - \alpha / 2} \frac{S_N}{\sqrt{N}} \leq \mu \leq \bar{T} + z_{1 - \alpha / 2} \frac{S_N}{\sqrt{N}} \right] \approx 1 - \alpha
+$$
+$$
+  S_N^2 = \frac{1}{N} \sum_{i = 1}^N (T^{(i)} - \bar{T})^2
+$$
+$z_{1 - \alpha / 2}$ é o quantil de probabilidade $(1 - \alpha / 2)$ da $N(0, 1)$.
+
+Outras quantidades de interesse:
+
+- A função de distribuição de $T$ no ponto $x$
+$$
+  F_T(x) = P(T \leq x)
+$$
+$$
+  F_T(x) \approx \hat{F}_T(x) = \frac{1}{N}\sum_{i = 1}^N I_{\{T^{(i)} \leq x\}}
+$$
+em que $I_{\{A\}}$ é a indicadora do evento $A$.
+
+- O quantil de probabilidade da distribuição de $T$: $X_p^T$: $P(T \leq X_p^T) = P$ pode ser estimado por um long run de N valores simulados $T^{(i)}$, de $N$ valores simulados $T^{(i)}$, $i = 1, 2, \dotsc, N$, ordenando-os:
+$$
+  T_{1:N} \leq T_{2:N} \leq \dotsm \leq T_{N:N}
+$$
+O quantil $p$ da estatística $T$ será estimad (para um $n$ fixo) por
+$$
+  X_p^T \approx \hat{X}_p^T = T_{[Np]+1:N}
+$$
+em que $[t]$ representa a parte inteira de $t$.
+
+Um intervalo de confiança de $X_p^T$ de grau de aproximadamente $\alpha$, pode ser obtido de 
+$$
+  P \left( T_{r:n} \leq X_p^T \leq T_{s:n} \right) \approx 1 - \alpha
+$$
+em que
+$$
+  r = \left[ Np - \sqrt{Np(1 - p)} z_{1 - \alpha / 2} + \frac{1}{2} \right],
+$$
+$$
+  s = \left[ Np + \sqrt{Np(1 - p)} z_{1 - \alpha / 2} + \frac{1}{2} \right]
+$$
+$z_{1 - \alpha / 2}$: quantil de probabilidade $(1 - \alpha \ 2)$ da $N(0, 1)$.
+
+
+## Lista 1
+
+**Exemplo:**
+Suponha que $X \sim F(x \mid \theta)$ e a estatística é um estimador de $\theta$:
+$$
+  \hat{\theta} = \hat{\theta}(X_1, X_2, \dotsc, X_n )
+$$
+
+O viés do estimador
+$$
+  \text{vies}(\hat{\theta}) = E_\theta[\hat{\theta} - \theta]
+$$
+assim
+$$
+  \text{vies}(\hat{\theta}) \approx \hat{\text{vies}}(\hat{\theta}) = \frac{1}{N} \sum_{i = 1}^N \hat{\theta}^{(i)} - \theta
+$$
+
+
+
+
+
+
+
+
