@@ -1,0 +1,179 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output: html_notebook
+date: "11 de Abril de 2018"
+---
+
+# Aula 6
+
+Outra aplicação importante da simulação de Monte Carlo é na área dos testes estatísticos.
+
+Seja $T = T(X_1, \dotsc, X_n)$ a estatística de teste que permite rejeitar ou não a hipótese nula ($H_0$).
+
+O teste de região de rejeição $R$ tem nível de significância $\alpha$ se, sob $H_0$,
+$$
+	P(T \in R) \leq \alpha.
+$$
+Em muitos casos esta condição só pode ser obtida assintóticamente -- testes de nível assintótico $\alpha$ -- e na prática recorre-se a aproximação para $n$ elevado.
+
+Assim, para valores pequenos de $n$ a probabilidade do erro de tipo I é na realidade desconhecida e pode ser estimada por simulações de Monte Carlo.
+
+---
+
+Para estimar a $P[\text{erro tipo I}]$ para valores pequenos de $n$ através da simulação de Monte Carlo, temos os seguintes passos:
+
+1. Gerar $N$ amostras independentes de acordo com o modelo postulado em $H_0$
+$$
+	\left( X_1^{(i)}, X_2^{(i)}, \dotsc, X_n^{(i)} \right),
+$$
+para $i = 1, 2, \dotsc, N$.
+
+2. Calcular
+$$
+	T^{(i)} = T^{(i)}\left( X_1^{(i)}, X_2^{(i)}, \dotsc, X_n^{(i)} \right),\ i = 1, \dotsc, N
+$$
+
+3. Determinar qual a porcententagem de amostras de $H_0$ que são rejeitadas (erroneamente).
+$$
+	P(\text{erro do tipo I}) = P(T \in R) \approx \frac{1}{N} \sum_{i = 1}^N I_{\{T^{(i)} \in R\}}.
+$$
+
+**Exemplo (Teste de Assimetria para Normalidade):**
+Cosiderar o teste de normalidade baseado no coeficiente de assimetria para uma população $X$.
+$$
+	\begin{cases}
+		H_0: \sqrt{\beta_1} = 0;\\
+		H_1: \sqrt{\beta_1} \neq 0.
+	\end{cases}
+$$
+e estudar a $P(\text{erro de tipo I})$ para valores finitos de $n$, sob hipótese de normalidade, qaundo se combinar pontos críticos *assintóticos*.
+O coeficiente de assimetria $\sqrt{\beta_1}$ para uma v.a. $X$ é definida por
+$$
+	\sqrt{\beta_1} = \frac{E((X - \mu_X)^3)}{\sigma_X^3},
+$$
+$\mu_X = E[X]$, $\sigma_X^2 = Var(X)$.
+
+- Se $\sqrt{\beta_1} = 0$, então a distribuição X é simétrica
+
+- Se $\sqrt{\beta_1} > 0$, então a distribuição X tem assimetria positiva
+
+- Se $\sqrt{\beta_1} < 0$, então a distribuição tem assimetria negativa.
+
+O coeficiente de assimetria $\sqrt{b_1}$ empiírico é dado por:
+$$
+	\sqrt{b_1} = \frac{\frac{1}{n}\sum_{i = 1}^n (X_i - \bar{X})^3}{(\frac{1}{n}\sum_{i = 1}^n (X_i - \bar{X})^2)^{3/2}}
+$$
+
+Se $X \sim Normal$, então
+$$
+	\sqrt{n / 6} \sqrt{b_1} \to_{n \to \infty}^d N(0, 1)
+$$
+
+Com nível assintótico $\alpha$, a região crítica $R$ associada à aproximação assimétrica para $n$ finito definida por
+$$
+	\sqrt{b_1} \sim^a N(0, 6 / n),
+$$
+é
+$$
+	R: |\sqrt{b_1}| \geq z_{1 - \alpha/2}^*
+$$
+com $z_{1 - \alpha/2}^*$ o quantil de probabilidade de uma $N(0, 6 / n)$.
+
+Contudo, a convergência de $\sqrt{b_1}$ para a distribuição limite é lenta e a distribuição assintótica não constitui uma boa aproximação para valores moderados de $n$.
+
+**Estudo no R:**
+Seja $\alpha = 5\%$ e começamos por determinar os pontos críticos para valores de $n = 10, 20, 30, 50, 100, 500$, dados pela aproximação assintótica.
+
+```{r}
+n  <- c(10, 20, 30, 50, 100, 500)
+cv <- qnorm(0.975, 0, sqrt(6 / n))
+cv <- round(cv, 4)
+
+print(cv)
+```
+Para cada dimensão ``n[i]`` a Região de Rejeição da Hipótese Nula $H_0$, $|\sqrt{b_1}| \geq cv_i$.
+No R:
+```{r}
+Sk <- function(x) {
+	xbar <- mean(x)
+	m3   <- mean((x - xbar) ^ 3)
+	m2   <- mean((x - xbar) ^ 2)
+	return(m3 / m2^(1.5))
+}
+```
+No algoritmo
+- rejeitar $H_0 \to 1$
+- não rejeitar $H_0 \to 0$
+
+```{r}
+# n é o vetor das dimensões da amostra
+# length(x)  # tamanho
+preje <- numeric(length(n))
+N <- 1000  # réplicas de MC
+
+for (i in 1:length(x)) {
+	sktests <- numeric(N)
+	for (j in 1:N) {
+		x <- rnorm(n[i])
+		# decisão do teste
+		sktests[j] <- abs(Sk(x)) >= cv[i]
+	}
+	preje[i] <- mean(sktests)
+}
+print(preje)
+```
+
+Sabe-se que sob normalidade o valor exato da variância do coeficiente de assimetria
+$$
+	Var(\sqrt{b_1}) = \frac{6 (n - 2)}{(n + 1)(n + 3)} \sim N\left( 0, \frac{6 (n - 1)}{(n + 1)(n + 3)} \right)
+$$
+```{r}
+print(n)
+cv <- qnorm(0.975, 0, sqrt((6 * (n - 2)) / ((n + 1) * (n + 3))))
+cv <- round(cv, 4)
+print(cv)
+```
+
+
+## Métodos de Reamostragem
+
+### Método de Bootstrap
+
+Foram propostos pelo Efron em 1979.
+São uma classe de métodos de Monte carlo não-paramétricos que estimam a distribuição da população por reamostragem.
+
+A distribuição da populaçãi finita representada pela amostra pode ser encarada como *pseudo-população*.
+
+Através da geração repetida de amostras aleatórias dessa pseudo-população (reamostragem), a dsitribuição de uma estatística pode ser estimada.
+
+O bootstrap gera amostras aleatoriamente a partir da distribuição empírica da amostra.
+
+Propriedades de um estimador como o viés ou o desvio-padrão podem ser estimados por reamostragem.
+
+**Definição (função de distribuição empírica):**
+Seja $\mathbf{x} = (x_1, \dotsc, x_n)$ (eventualmente com repetição) uma amostra aleatória da fd $F_X(\cdot)$.
+A função de distribuição associada a $X^*$ que atribui uniformemente
+$$
+	P(X^* = x_i) = \frac{1}{n}
+$$
+é a chamadafunção de distribuição empírica (fde) e denota-se por $F_n(\cdot)$.
+
+$F_n(x)$ é um bom estimador de $F_X(x) para todo $x$.
+
+Em bootstrap existem duas aproximações
+
+- a fde da amostra inicial, $F_n$, aproxima a fd $F_X$ da população $X$.
+
+- a fde da amostra reamostrada por bootstrap, $F_n^*$, aproxima $F_n$.
+
+
+**Algoritmo BOOT**
+
+- Para cada réplica bootstrap, b = 1, 2, ..., B:
+	a. Gera amostra bootstrap $x^{*(b)} = x_1^*, ..., x_n^*$ através de reamostragem com reposição da amostra observada $x_1, ..., x_n$
+	b. Calcular a b-ésima réplica $\hat{\theta}^{(b)}$ na amostra bootstrap $x^{*(b)}$
+
+- A estimativa bootstrap de $F_{\hat{\theta}}(\cdot)$ é a função de distribuição empírica das réplicas $\hat{\theta}^{(1)}, \dotsc, \hat{\theta}^{(B)}$ dado por
+$$
+	F_n^*(x) = \frac{1}{B} \sum_{b = 1}^{B} I_{\{ \hat{\theta}^{(b)} \leq x \}}
+$$
