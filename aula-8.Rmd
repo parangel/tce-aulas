@@ -1,0 +1,186 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output: html_notebook
+date: "25 de Abril de 2018"
+---
+
+# Aula 8
+
+## Intervalo de Confiança Bootstrap
+
+### Intervalo de Confiança Bootstrap Normal
+
+Suponha que $\hat{\theta}$ é um estimador para o parâmetro $\theta$, e que temos o seguinte estimador para o desvio-padrão de $\hat\theta$, $\widehat{se}(\theta)$, pelo TLC,
+$$
+	z = \frac{\hat\theta - E(\hat\theta)}{se(\hat\theta)} \sim Normal
+$$
+De maneira que se $\hat\theta$ é não viesado para $\theta$, um IC para $\theta$ é dado por
+$$
+	\hat\theta \pm z_{\alpha/2} se(\hat\theta)
+$$
+em que $z_{\alpha/2} = \Phi(1 - \alpha/2)$.
+
+
+### Intervalo de Confiança Bootstrap Básico
+
+O IC bootstrap básico transforma a distribuição dos réplicas subtraindo a estatística observada.
+
+O IC de confiança de $100(1 - \alpha)\%$ é dado por
+$$
+	(2 \hat\theta - \hat\theta_{1 - \alpha/2}, 2 \hat\theta - \hat\theta_{\alpha/2})
+$$
+Suponha que $T$ seja um estimador para $\theta$ e que $a_\alpha$ é o $\alpha$-quantil de $T-\theta$
+$$
+	P(T - \theta > a_\alpha) = 1 - \alpha \Rightarrow P(T - a_\alpha > \theta) = 1 - \alpha
+$$
+Podemos construir um IC $100(1 - 2\alpha)\%$
+$$
+	(t - a_{1 - \alpha}, t - a_{\alpha})
+$$
+Em bootstrap, a distribuição de $T$ é geralmente desconhecida, mas quantis podem ser estomados e uma aproximação pode ser obtida.
+
+Computa o $\alpha$-quantil amostral $\hat\theta_alpha$ da função de distribuição empírica das réplicas $\hat\theta^*$.
+
+Denote o $\alpha$-quantil de $\hat\theta^* - \hat\theta$.
+
+Então, $\hat{b}_\alpha = \hat\theta^* - \hat\theta$ é um estimador para $b_\alpha$.
+Assim um limite superior para um IC de $100(1 - \alpha)\%$ para $\theta$ é dado por
+$$
+	\hat\theta - b_{\alpha / 2} = \hat\theta - (\hat\theta_{\alpha/2} - \hat\theta) = 2 \hat\theta - \hat\theta_{\alpha / 2}
+$$
+
+Da mesma forma, podemos obter o limite inferior do IC
+$$
+	2 \hat\theta - \hat\theta_{1 - \alpha / 2}
+$$
+
+### Intervalos de Confiança Bootstrap Percentil
+
+Suponha que $\hat\theta^{(1)}, \dotsc, \hat\theta^{(B)}$ são as réplicas bootstrap da estatística $\hat\theta$.
+Da função de distribuição empírica das réplicas, compute o $\alpha/2$-quantil $\hat\theta_{\alpha/2}$, e o $1-{\alpha/2}$-quantil $\hat\theta_{1 - \alpha/2}$, então esses seriam os limites inferior e superior do IC, respectivamente.
+
+**Exemplo:**
+$\beta = 10000$, IC de $90\%$: $\hat\theta^{(1)} \leq \hat\theta^{(2)} \leq \hat\theta^{(3)} \leq \dotsb \leq \hat\theta^{(10000)}$
+$$
+	\left[ \hat\theta^{(500)}, \hat\theta^{(9500)} \right]
+$$
+
+**Exemplo:**
+```{r}
+library("boot")
+data(patch, package = "bootstrap")
+
+thetaboot <- function(dat, ind) {
+	# funcao para computar a estatistica
+	y <- dat[ind, 1]
+	z <- dat[ind, 2]
+	mean(y) / mean(z)
+}
+
+y <- patch$y
+z <- patch$z
+
+dat <- cbind(y, z)
+
+bootobj <- boot(dat, statistic = thetaboot, R = 2000)
+print(boot.ci(bootobj, type = c("basic", "norm", "perc")))
+
+# Usando a definição
+alpha <- c(0.025, 0.975)
+
+# Normal
+print(bootobj$t0 + qnorm(alpha) * sd(bootobj$t))
+
+# Básico
+print(2 * bootobj$t0 - quantile(bootobj$t, rev(alpha)))
+
+# Percentil
+print(quantile(bootobj$t, alpha))
+
+
+```
+
+### O Intervalo Bootstrap
+
+O IC bootstrap $t$ de $100(1 - \alpha)\%$ é dado por
+$$
+	(\hat\theta - t_{1 - \alpha / 2}^* \widehat{se}(\hat\theta), \hat\theta - t_{\alpha / 2}^* \widehat{se}(\hat\theta))
+$$
+em que $\widehat{se}(\hat\theta)$, $\hat\theta - t_{\alpha / 2}^*$ e $\hat\theta - t_{1 - \alpha / 2}^*$ sãp computados conform os passos abaixo:
+
+1. Computa a estatística observada $\hat\theta$.
+
+2. Para cada réplica, indexado $b = 1, \dotsc, B$
+
+ a. Amostrar com reposição de $x$ para obter a $b$-ésima amostra $\left( x_1^{(b)}, \dotsc, x_n^{(b)} \right)$
+
+ b. Compute $\hat\theta^{(b)}$ da $b$-ésima amostra $x^{(b)}$.
+
+ c. Computar ou estimar o erro padrão $\widehat{se} \left( \hat\theta^{(b)} \right)$.
+
+ d. Compute a $b$-ésima réplica da estatística $t$, $t^{(b)} = \frac{\hat\theta^{(b)} - \hat\theta}{\widehat{se}(\hat\theta^{(b)})}$
+
+3. A amostra de réplicas $t^{(1)}, \dotsc, t^{(B)}$ é a distribuição de referência para o bootstrap $t$.
+Ache os quantis amostrais $t_{\alpha/2}^*$ e $t_{1 - \alpha/2}^*$ da amostra ordenada de réplicas $t^{(b)}$.
+
+4. Compute o $\widehat{se}(\hat\theta)$, ou seja, o desvio-padrão das réplicas $\hat\theta^{(b)}$.
+
+5. Compute os limites $\left( \hat\theta - t_{1 - \alpha / 2} \widehat{se}(\hat\theta), \hat\theta - t_{\alpha / 2} \widehat{se}(\hat\theta) \right)$.
+
+### Intervalos de Confiança Bootstrap *Better* (BCa)
+
+O BCa é uma versão modificada do IC Percentil.
+
+Para um IC de $100(1 - \alpha)\%$, os quantis usuais $\alpha/2$ e $1 - \alpha/2$ são ajustados por dois fatores:
+correção por viés e correção por assimetria.
+A correção de viés é denotada $z_0$ e a assimetria com ajuste de "acelereação" é $a$.
+
+Para um IC bootstrap BCa de $100(1 - \alpha)\%$, temos
+$$
+	\alpha_1 = \Phi \left( \hat{z}_0 + \frac{\hat{z}_0 + z_{\alpha / 2}}{1 - \hat{a}(\hat{z}_0 + z_{\alpha/2})} \right)
+$$
+$$
+	\alpha_2 = \Phi \left( \hat{z}_0 + \frac{\hat{z}_0 + z_{1 - \alpha / 2}}{1 - \hat{a}(\hat{z}_0 + z_{1 - \alpha/2})} \right)
+$$
+where $z_\alpha = \Phi^{-1}(\alpha)$,
+$$
+	\hat{z}_0 = \Phi^{-1} \left( \frac{1}{B} \sum_{b = 1}^B I_{(\hat\theta^{(b)} < \hat\theta)} \right) \quad \text{(viés)}
+$$
+$$
+	\hat{a} = \frac{\sum_{i = 1}^n \left( \bar{\hat\theta}(\cdot) - \hat\theta_{(i)} \right)^3}{6 \sum_{i = 1}^n \left( \left( \bar{\hat\theta}(\cdot) - \hat\theta_{(i)} \right)^{2} \right)^{3/2}} \quad \text{(assimetria)}
+$$
+??
+
+**Exemplo:**
+```{r}
+bootBCa <- function(x, th0, th, stat, conf = 0.95) {
+	# bootstrap com IC BCa
+	# th0 é a esstatística observada
+	# th é o vetor réplicas bootstrap
+	# stat é a função para computar a estatística
+	x <- as.matrix(x)
+	n <- nrow(x)
+	N <- 1:n
+	alpha <- (1 + c(-conf, conf)) / 2
+	zalpha <- qnorm(alpha)
+	
+	# o fator para correção do viés
+	z0 <- qnorm(sum(th < th0 / length(th)))
+	
+	# fator de assimetria
+	thjack <- numeric(n)
+	for (i in 1:n) {
+		J <- N[1:(n - 1)]
+		thjack[i] <- stat(x[-i, ], J)
+	}
+	
+	L <- mean(thjack) - thjack
+	a <- sum(L ^ 3) / (6 * sum(L ^ 2) ^ 1.5)
+
+	adjalpha <- pnorm(z0 + (z0 + zalpha) / (1 - a * (z0 + zalpha)))
+	limits <- quantile(th, adjalpha)
+	
+	return(list(est = th0, BCa = limits))
+}
+```
+
