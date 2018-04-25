@@ -42,8 +42,8 @@ $$
 Cosiderar o teste de normalidade baseado no coeficiente de assimetria para uma população $X$.
 $$
 	\begin{cases}
-		H_0: \sqrt{\beta_1} = 0;\\
-		H_1: \sqrt{\beta_1} \neq 0.
+		H_0\!: \sqrt{\beta_1} = 0;\\
+		H_1\!: \sqrt{\beta_1} \neq 0.
 	\end{cases}
 $$
 e estudar a $P(\text{erro de tipo I})$ para valores finitos de $n$, sob hipótese de normalidade, qaundo se combinar pontos críticos *assintóticos*.
@@ -61,7 +61,7 @@ $\mu_X = E[X]$, $\sigma_X^2 = Var(X)$.
 
 O coeficiente de assimetria $\sqrt{b_1}$ empiírico é dado por:
 $$
-	\sqrt{b_1} = \frac{\frac{1}{n}\sum_{i = 1}^n (X_i - \bar{X})^3}{(\frac{1}{n}\sum_{i = 1}^n (X_i - \bar{X})^2)^{3/2}}
+	\sqrt{b_1} = \frac{\frac{1}{n}\sum_{i = 1}^n (X_i - \bar{X})^3}{\left( \frac{1}{n}\sum_{i = 1}^n (X_i - \bar{X})^2 \right)^{3/2}}
 $$
 
 Se $X \sim Normal$, então
@@ -75,7 +75,7 @@ $$
 $$
 é
 $$
-	R: |\sqrt{b_1}| \geq z_{1 - \alpha/2}^*
+	R\!: \left| \sqrt{b_1} \right| \geq z_{1 - \alpha/2}^*
 $$
 com $z_{1 - \alpha/2}^*$ o quantil de probabilidade de uma $N(0, 6 / n)$.
 

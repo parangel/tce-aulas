@@ -1,0 +1,173 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output: html_notebook
+date: "18 de Abril de 2018"
+---
+
+# Aula 7
+
+## Bootstrap
+
+$$
+	F_n(x) = \frac{1}{B}\sum_{i = 1}^{B} I_{\{\hat{\theta}^{(b)} \leq x \}}
+$$
+
+### Estimação do Viés
+
+$$
+	\widehat{vies}(\hat{\theta}) = \frac{1}{B} \sum_{i = 1}^{n}\hat{\theta}^{(b)} - \hat{\theta}
+$$
+
+O viés de um estimador $\hat{\theta$ de $\theta$ é definido como
+$$
+	vies(\hat{\theta}) = E(\hat{\theta}) - \theta
+$$
+
+A estimação *bootstrap* do viés usa réplicas *bootstrap* de $\hat{\theta}$ para estimar a distribuição de amostragem de $\hat{\theta}$.
+
+**Definição (Estimação bootstrap de viés):**
+$$
+	\widehat{vies}^*(\hat{\theta}) = \bar{\hat{\theta}}^* - \hat{\theta}
+$$
+em que
+$$
+	\bar{\hat{\theta}}^* = \frac{1}{B} \sum_{i = 1}^{n}\hat{\theta}^{(b)}
+$$
+e $\hat{\theta} = \hat{\theta}(x_1, \dotsc, x_n)$
+
+**Exemplo (estimativa bootstrap do viés em R):**
+A base de dados ´law´ de Direito na biblioteca ´bootstrap´ é de Efron e Tibshinamo.
+O data-frame contém dados referentes a LSAT (Law School Average Test) e GPA (Grade-Point Average) para 15 faculdades de direito.
+
+Esta base de dados é na realidade uma amostra aleatória do universo de 82 faculdades de direito em ´law82´.
+Calcular a estimativa *bootstrap* do viés do coeficiente de correlação amostral.
+
+```{r}
+library("bootstrap")
+data(law)
+
+B <- 1000
+theta_hat <- cor(law$LSAT, law$GPA)
+
+for (i in 1:B) {
+	ind <- sample(1:15, size = 15, replace = TRUE)
+	theta_b[i] <- cor(law$LSAT[ind], law$GPA[ind])
+}
+bias_theta <- mean(theta_b) - theta_hat
+print(bias_theta)
+
+
+```
+
+
+### Estimação do Desvio-Padrão
+
+A estimação bootstrap do desvio-padrão de um estimador $\hat{\theta}$ é o desvio-padrão-padrão empírico das réplicas bootstrap $\hat{\theta}^{(1)}, \dotsc, \hat{\theta}^{(B)}$
+$$
+	\widehat{se}^* = \sqrt{\frac{1}{B - 1} \sum_{b = 1}^{B} (\hat{\theta}^{(b)} - \bar\hat\theta^*)^2}
+$$
+em que $\bar{\hat\theta}^* = \frac{1}{B}\sum_{b = 1}^B \hat\theta^{(b)}$
+
+```{r}
+
+# FAZER COM DESVIO-PADRAO
+
+library("bootstrap")
+data(law)
+
+B <- 1000
+theta_hat <- cor(law$LSAT, law$GPA)
+
+for (i in 1:B) {
+	ind <- sample(1:15, size = 15, replace = TRUE)
+	theta_b[i] <- cor(law$LSAT[ind], law$GPA[ind])
+}
+bias_theta <- mean(theta_b) - theta_hat
+print(bias_theta)
+
+
+```
+
+## Metodologia Jackknife
+
+De forma genérica, podemos dizer que se trata de uma metodologia de reamostragem de um estimador
+$$
+	\hat{\theta}_n = \hat\theta_n (X_1, \dotsc, X_n)
+$$
+que vai deixando de fora uma observação em cada reamostragem de tamanho $n - 1$.
+$$
+	X^{(j)} = (X_1, \dotsc, X_{j-1}, X_{j+1}, \dotsc, X_n),\quad j = 1, \dotsc, n
+$$
+designadas por amostras de Jackknife
+
+Com base nas amostras Jackknife calculam-se
+$$
+	\hat\theta^{(j)} = \hat\theta_{n-1}(X^{(j)}),\quad j = 1, \dotsc, n.
+$$
+
+**Definição:**
+
+**Exemplo:**
+Os dados patch (bootstrap) de Efron e Tibshirami contém medidas de um certo hormônio na corrente sanguínea de oito sujeitos depois de usarem um medicamento.
+O parâmetro de interesse é
+$$
+	\theta = \frac{E[\text{novo}] - E[\text{antigo}]}{E[\text{antigo}] - E[\text{placebo}]}
+$$
+Se $|\theta| \leq 0.20$ isso indica bioequivalência dos antigos e novos medicamentos.
+
+A estatística de interesse é a razão
+$$
+	\hat\theta = \bar Y / \bar Z
+$$
+com Y = 
+
+
+```{r}
+data("patch")
+patch
+n <- nrow(patch)
+
+theta <- mean(patch$y) / mean(patch$z)
+theta_hat <- numeric(n)
+
+for (i in 1:n) {
+	theta_hat[i] <- mean(patch$y[-i]) / mean(patch$z[-i])
+}
+
+bias_theta <- mean(theta_hat - theta)
+```
+
+### Quando o Jackknife Falha
+
+O Jackknife pode falhar quando a estatística $\hat\theta$ não é "suave".
+Suavidade significa que pequenas mudanças nos dados correspondem a pequenas mudanças na estatística.
+Em particular, a mediana é um exemplo de uma estatística que não é "suave".
+
+**Exemplo (Falha de Jackknife):**
+Nesse exemplo o estimador Jackknife do erro padrão da mediana é computado para uma amostra de 10 inteiro de 1 a 100.
+
+```{r}
+n <- 10
+set.seed(151)
+x <- sample(1:100, size = n)
+
+# Jackknife estimate of s.e.
+M <- numeric(n)
+for (i in 1:n) {
+	y <- x[-i]
+	M[i] <- median(y)
+}
+Mbar <- mean(M)
+print(sqrt((n - 1) / (n * sum((M - Mbar) ^ 2))))
+
+# Bootstrap estimate of s.e.
+Mb <- replicate(1000, expr = {y <- sample(x, size = n, replace = TRUE) ; median(y)})
+print(sd(Mb))
+```
+
+
+
+
+
+
+
