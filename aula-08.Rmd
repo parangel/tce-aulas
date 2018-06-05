@@ -1,6 +1,8 @@
 ---
 title: "Técnicas Computacionais em Estatística"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 date: "25 de Abril de 2018"
 ---
 
@@ -23,7 +25,7 @@ em que $z_{\alpha/2} = \Phi(1 - \alpha/2)$.
 
 ### Intervalo de Confiança Bootstrap Básico
 
-O IC bootstrap básico transforma a distribuição dos réplicas subtraindo a estatística observada.
+O IC bootstrap básico transforma a distribuição das réplicas subtraindo a estatística observada.
 
 O IC de confiança de $100(1 - \alpha)\%$ é dado por
 $$
@@ -39,14 +41,14 @@ $$
 $$
 Em bootstrap, a distribuição de $T$ é geralmente desconhecida, mas quantis podem ser estomados e uma aproximação pode ser obtida.
 
-Computa o $\alpha$-quantil amostral $\hat\theta_alpha$ da função de distribuição empírica das réplicas $\hat\theta^*$.
+Computa o $\alpha$-quantil amostral $\hat\theta_\alpha$ da função de distribuição empírica das réplicas $\hat\theta^*$.
 
-Denote o $\alpha$-quantil de $\hat\theta^* - \hat\theta$.
+Denote o $\alpha$-quantil de $\hat\theta^* - \hat\theta$ por $b_\alpha$.
 
 Então, $\hat{b}_\alpha = \hat\theta^* - \hat\theta$ é um estimador para $b_\alpha$.
 Assim um limite superior para um IC de $100(1 - \alpha)\%$ para $\theta$ é dado por
 $$
-	\hat\theta - b_{\alpha / 2} = \hat\theta - (\hat\theta_{\alpha/2} - \hat\theta) = 2 \hat\theta - \hat\theta_{\alpha / 2}
+	\hat\theta - \hat{b}_{\alpha / 2} = \hat\theta - (\hat\theta_{\alpha/2} - \hat\theta) = 2 \hat\theta - \hat\theta_{\alpha / 2}
 $$
 
 Da mesma forma, podemos obter o limite inferior do IC
@@ -54,12 +56,15 @@ $$
 	2 \hat\theta - \hat\theta_{1 - \alpha / 2}
 $$
 
+
 ### Intervalos de Confiança Bootstrap Percentil
 
 Suponha que $\hat\theta^{(1)}, \dotsc, \hat\theta^{(B)}$ são as réplicas bootstrap da estatística $\hat\theta$.
 Da função de distribuição empírica das réplicas, compute o $\alpha/2$-quantil $\hat\theta_{\alpha/2}$, e o $1-{\alpha/2}$-quantil $\hat\theta_{1 - \alpha/2}$, então esses seriam os limites inferior e superior do IC, respectivamente.
 
+
 **Exemplo:**
+
 $\beta = 10000$, IC de $90\%$: $\hat\theta^{(1)} \leq \hat\theta^{(2)} \leq \hat\theta^{(3)} \leq \dotsb \leq \hat\theta^{(10000)}$
 $$
 	\left[ \hat\theta^{(500)}, \hat\theta^{(9500)} \right]
@@ -100,25 +105,26 @@ print(quantile(bootobj$t, alpha))
 
 ```
 
+
 ### O Intervalo Bootstrap
 
 O IC bootstrap $t$ de $100(1 - \alpha)\%$ é dado por
 $$
-	(\hat\theta - t_{1 - \alpha / 2}^* \widehat{se}(\hat\theta), \hat\theta - t_{\alpha / 2}^* \widehat{se}(\hat\theta))
+	(\hat\theta - t_{1 - \alpha / 2}^* \widehat{se}(\hat\theta),\ \hat\theta - t_{\alpha / 2}^* \widehat{se}(\hat\theta))
 $$
-em que $\widehat{se}(\hat\theta)$, $\hat\theta - t_{\alpha / 2}^*$ e $\hat\theta - t_{1 - \alpha / 2}^*$ sãp computados conform os passos abaixo:
+em que $\widehat{se}(\hat\theta)$, $\hat\theta - t_{\alpha / 2}^*$ e $\hat\theta - t_{1 - \alpha / 2}^*$ são computados conform os passos abaixo:
 
-1. Computa a estatística observada $\hat\theta$.
+1. Computa a estatística observando $\hat\theta$.
 
 2. Para cada réplica, indexado $b = 1, \dotsc, B$
 
- a. Amostrar com reposição de $x$ para obter a $b$-ésima amostra $\left( x_1^{(b)}, \dotsc, x_n^{(b)} \right)$
+ 	a. Amostrar com reposição de $x$ para obter a $b$-ésima amostra $x^{(b)} = \left( x_1^{(b)}, \dotsc, x_n^{(b)} \right)$
 
- b. Compute $\hat\theta^{(b)}$ da $b$-ésima amostra $x^{(b)}$.
+	b. Compute $\hat\theta^{(b)}$ da $b$-ésima amostra $x^{(b)}$.
 
- c. Computar ou estimar o erro padrão $\widehat{se} \left( \hat\theta^{(b)} \right)$.
+	c. Computar ou estimar o erro padrão $\widehat{se} \left( \hat\theta^{(b)} \right)$.
 
- d. Compute a $b$-ésima réplica da estatística $t$, $t^{(b)} = \frac{\hat\theta^{(b)} - \hat\theta}{\widehat{se}(\hat\theta^{(b)})}$
+	d. Compute a $b$-ésima réplica da estatística $t$, $t^{(b)} = \frac{\hat\theta^{(b)} - \hat\theta}{\widehat{se}(\hat\theta^{(b)})}$
 
 3. A amostra de réplicas $t^{(1)}, \dotsc, t^{(B)}$ é a distribuição de referência para o bootstrap $t$.
 Ache os quantis amostrais $t_{\alpha/2}^*$ e $t_{1 - \alpha/2}^*$ da amostra ordenada de réplicas $t^{(b)}$.
@@ -142,16 +148,24 @@ $$
 $$
 	\alpha_2 = \Phi \left( \hat{z}_0 + \frac{\hat{z}_0 + z_{1 - \alpha / 2}}{1 - \hat{a}(\hat{z}_0 + z_{1 - \alpha/2})} \right)
 $$
-where $z_\alpha = \Phi^{-1}(\alpha)$,
+onde $z_\alpha = \Phi^{-1}(\alpha)$.
+
+**Obs.:**
+Se $\hat{z}_0 = \hat{a}$, então $\alpha_1 = \alpha / 2$ e $\alpha_2 = 1 - \alpha / 2$.
+
 $$
-	\hat{z}_0 = \Phi^{-1} \left( \frac{1}{B} \sum_{b = 1}^B I_{(\hat\theta^{(b)} < \hat\theta)} \right) \quad \text{(viés)}
+	\hat{z}_0 = \Phi^{-1} \left( \frac{1}{B} \sum_{b = 1}^B\ I\left(\hat\theta^{(b)} < \hat\theta\right) \right) \quad \text{(viés)}
 $$
 $$
 	\hat{a} = \frac{\sum_{i = 1}^n \left( \bar{\hat\theta}(\cdot) - \hat\theta_{(i)} \right)^3}{6 \sum_{i = 1}^n \left( \left( \bar{\hat\theta}(\cdot) - \hat\theta_{(i)} \right)^{2} \right)^{3/2}} \quad \text{(assimetria)}
 $$
-??
+
+$\bar{\hat{\theta}}$ é a estimativa de $\theta$ sem a $i$-ésima observação.
+O IC então será $(\theta_{\alpha_1}^*, \theta_{\alpha_1}^*)$.
+
 
 **Exemplo:**
+
 ```{r}
 bootBCa <- function(x, th0, th, stat, conf = 0.95) {
 	# bootstrap com IC BCa

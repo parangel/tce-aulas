@@ -1,14 +1,17 @@
 ---
 title: "Técnicas Computacionais em Estatística"
-output: html_notebook
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 date: "4 de Abril de 2018"
 ---
 
 # Aula 5
 
-## Métodos de Monte Carlo - Aplicações em Inferência
+## Métodos de Monte Carlo -- Aplicações em Inferência
 
-Po exemplo, o valor médio de $\mu = E[X]$ pode ser estimado da seguinte forma:
+Por exemplo, o valor médio de $\mu = E[X]$ pode ser estimado da seguinte forma:
 
 1. Gerar $N$ amotras independentes do modelo $i = 1, 2, \dotsc, N$
 $$
@@ -26,7 +29,7 @@ $$
   \mu \approx \hat{\mu} = \bar{T} = \frac{1}{N} \sum_{i = 1}^N T^{(i)}
 $$
 
-Um intervalo de confiança para $\mu = E[T]$ de grau aproximadamente 2 é dado pela relação
+Um intervalo de confiança para $\mu = E[T]$ de grau aproximadamente $\alpha$ é dado pela relação
 $$
   P \left[ \bar{T} - z_{1 - \alpha / 2} \frac{S_N}{\sqrt{N}} \leq \mu \leq \bar{T} + z_{1 - \alpha / 2} \frac{S_N}{\sqrt{N}} \right] \approx 1 - \alpha
 $$
@@ -46,11 +49,11 @@ $$
 $$
 em que $I_{\{A\}}$ é a indicadora do evento $A$.
 
-- O quantil de probabilidade da distribuição de $T$: $X_p^T$: $P(T \leq X_p^T) = P$ pode ser estimado por um long run de N valores simulados $T^{(i)}$, de $N$ valores simulados $T^{(i)}$, $i = 1, 2, \dotsc, N$, ordenando-os:
+- O quantil de probabilidade da distribuição de $T$: $X_p^T$: $P(T \leq X_p^T) = p$ pode ser estimado por um long run de N valores simulados $T^{(i)}$, de $N$ valores simulados $T^{(i)}$, $i = 1, 2, \dotsc, N$, ordenando-os:
 $$
-  T_{1:N} \leq T_{2:N} \leq \dotsm \leq T_{N:N}
+  T_{1:N} \leq T_{2:N} \leq \dotsb \leq T_{N:N}
 $$
-O quantil $p$ da estatística $T$ será estimad (para um $n$ fixo) por
+O quantil de probabilidade $p$ da estatística $T$ será estimado (para um $n$ fixo) por
 $$
   X_p^T \approx \hat{X}_p^T = T_{[Np]+1:N}
 $$
@@ -67,12 +70,13 @@ $$
 $$
   s = \left[ Np + \sqrt{Np(1 - p)} z_{1 - \alpha / 2} + \frac{1}{2} \right]
 $$
-$z_{1 - \alpha / 2}$: quantil de probabilidade $(1 - \alpha \ 2)$ da $N(0, 1)$.
+$z_{1 - \alpha / 2}$: quantil de probabilidade $(1 - \alpha / 2)$ da $N(0, 1)$.
 
 
 ## Lista 1
 
 **Exemplo:**
+
 Suponha que $X \sim F(x \mid \theta)$ e a estatística é um estimador de $\theta$:
 $$
   \hat{\theta} = \hat{\theta}(X_1, X_2, \dotsc, X_n )
@@ -87,10 +91,15 @@ $$
   \text{vies}(\hat{\theta}) \approx \hat{\text{vies}}(\hat{\theta}) = \frac{1}{N} \sum_{i = 1}^N \hat{\theta}^{(i)} - \theta
 $$
 
-
-
-
-
+O EQM (erro quadrático médio) do estimador pode ser obtido como
+$$
+	EQM(\hat{\theta}) = E[(\hat{\theta} - \theta) ^ 2]
+$$
+e estimado como
+$$
+	EQM(\hat{\theta}) \approx \widehat{EQM}(\hat{\theta}) = \frac{1}{N} \sum^N \left(\hat{\theta}^{(i)} - \theta \right) ^ 2
+$$
+com $\hat{\theta} ^ {(i)} = \hat{\theta} ^ {(i)}(X_1, \dotsc, X_n)$.
 
 
 

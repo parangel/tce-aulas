@@ -1,6 +1,8 @@
 ---
 title: "Técnicas Computacionais em Estatística"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 date: "11 de Abril de 2018"
 ---
 
@@ -14,7 +16,7 @@ O teste de região de rejeição $R$ tem nível de significância $\alpha$ se, s
 $$
 	P(T \in R) \leq \alpha.
 $$
-Em muitos casos esta condição só pode ser obtida assintóticamente -- testes de nível assintótico $\alpha$ -- e na prática recorre-se a aproximação para $n$ elevado.
+Em muitos casos esta condição só pode ser obtida assintóticamente---testes de nível assintótico $\alpha$---e na prática recorre-se a aproximação para $n$ elevado.
 
 Assim, para valores pequenos de $n$ a probabilidade do erro de tipo I é na realidade desconhecida e pode ser estimada por simulações de Monte Carlo.
 
@@ -38,7 +40,9 @@ $$
 	P(\text{erro do tipo I}) = P(T \in R) \approx \frac{1}{N} \sum_{i = 1}^N I_{\{T^{(i)} \in R\}}.
 $$
 
+
 **Exemplo (Teste de Assimetria para Normalidade):**
+
 Cosiderar o teste de normalidade baseado no coeficiente de assimetria para uma população $X$.
 $$
 	\begin{cases}
@@ -71,7 +75,7 @@ $$
 
 Com nível assintótico $\alpha$, a região crítica $R$ associada à aproximação assimétrica para $n$ finito definida por
 $$
-	\sqrt{b_1} \sim^a N(0, 6 / n),
+	\sqrt{b_1} \overset{a}{\sim} N(0, 6 / n),
 $$
 é
 $$
@@ -81,7 +85,9 @@ com $z_{1 - \alpha/2}^*$ o quantil de probabilidade de uma $N(0, 6 / n)$.
 
 Contudo, a convergência de $\sqrt{b_1}$ para a distribuição limite é lenta e a distribuição assintótica não constitui uma boa aproximação para valores moderados de $n$.
 
+
 **Estudo no R:**
+
 Seja $\alpha = 5\%$ e começamos por determinar os pontos críticos para valores de $n = 10, 20, 30, 50, 100, 500$, dados pela aproximação assintótica.
 
 ```{r}
@@ -102,7 +108,9 @@ Sk <- function(x) {
 }
 ```
 No algoritmo
+
 - rejeitar $H_0 \to 1$
+
 - não rejeitar $H_0 \to 0$
 
 ```{r}
@@ -111,7 +119,7 @@ No algoritmo
 preje <- numeric(length(n))
 N <- 1000  # réplicas de MC
 
-for (i in 1:length(x)) {
+for (i in 1:length(n)) {
 	sktests <- numeric(N)
 	for (j in 1:N) {
 		x <- rnorm(n[i])
@@ -142,7 +150,7 @@ print(cv)
 Foram propostos pelo Efron em 1979.
 São uma classe de métodos de Monte carlo não-paramétricos que estimam a distribuição da população por reamostragem.
 
-A distribuição da populaçãi finita representada pela amostra pode ser encarada como *pseudo-população*.
+A distribuição da população finita representada pela amostra pode ser encarada como *pseudo-população*.
 
 Através da geração repetida de amostras aleatórias dessa pseudo-população (reamostragem), a dsitribuição de uma estatística pode ser estimada.
 
@@ -150,7 +158,9 @@ O bootstrap gera amostras aleatoriamente a partir da distribuição empírica da
 
 Propriedades de um estimador como o viés ou o desvio-padrão podem ser estimados por reamostragem.
 
+
 **Definição (função de distribuição empírica):**
+
 Seja $\mathbf{x} = (x_1, \dotsc, x_n)$ (eventualmente com repetição) uma amostra aleatória da fd $F_X(\cdot)$.
 A função de distribuição associada a $X^*$ que atribui uniformemente
 $$
@@ -158,7 +168,7 @@ $$
 $$
 é a chamadafunção de distribuição empírica (fde) e denota-se por $F_n(\cdot)$.
 
-$F_n(x)$ é um bom estimador de $F_X(x) para todo $x$.
+$F_n(x)$ é um bom estimador de $F_X(x)$ para todo $x$.
 
 Em bootstrap existem duas aproximações
 
@@ -169,8 +179,10 @@ Em bootstrap existem duas aproximações
 
 **Algoritmo BOOT**
 
-- Para cada réplica bootstrap, b = 1, 2, ..., B:
+- Para cada réplica bootstrap,$ b = 1, 2, ..., B$:
+
 	a. Gera amostra bootstrap $x^{*(b)} = x_1^*, ..., x_n^*$ através de reamostragem com reposição da amostra observada $x_1, ..., x_n$
+
 	b. Calcular a b-ésima réplica $\hat{\theta}^{(b)}$ na amostra bootstrap $x^{*(b)}$
 
 - A estimativa bootstrap de $F_{\hat{\theta}}(\cdot)$ é a função de distribuição empírica das réplicas $\hat{\theta}^{(1)}, \dotsc, \hat{\theta}^{(B)}$ dado por

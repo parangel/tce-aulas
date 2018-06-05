@@ -1,25 +1,31 @@
 ---
 title: "Técnicas Computacionais em Estatística"
-output: html_notebook
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 date: "21 de Março de 2018"
 ---
 
 # Aula 3
 
 **Exemplo:**
+
 Usar o método da transformada inversa para gerar uma amostra de $n$ valores pseudo-aleatórios do modelo logarítmico ($\theta = 0.5$)
 $$
 	f_X(x) = P(X = x) = \frac{a \theta^x}{x},
 $$
 $x = 1, 2, 3, \dotsc$, $0 < \theta < 1$, $a = -\frac{1}{\log(1 - \theta)}$.
 $$
-	f_X(x) = \exp(\log(a) + x \log(\theta) - \log(x))
+	f_X(x) = \exp\{\log(a) + x \log(\theta) - \log(x)\}
 $$
-guardar num vetor os
+
+- Guardar num vetor os
 $$
 	F_X(x),\ x = 1, 2, \dotsc, N\ \text{(elevado)}.
 $$
-Resolver $F_X(x - 1) < u \leq F_X(x)$.
+
+- Resolver $F_X(x - 1) < u \leq F_X(x)$.
 
 Para resolver $F_X(x - 1) < u \le F_X(x)$ para um dado $u$ é necessário contar o número de valores $x$ dos quais
 $$
@@ -37,7 +43,7 @@ fk <- exp(log(a) + k * log(theta) - log(k))
 Fk <- cumsum(fk)
 
 Fk
-plot(Fk, ylim = 0:1)
+# plot(Fk, ylim = 0:1)
 ```
 
 ```{r}
@@ -77,9 +83,11 @@ plot(freq)
 ```
 
 
-### Método da Transformação - Distribuição Poisson($\lambda$)
+### Método da Transformação -- Distribuição Poisson($\lambda$)
+
 
 **Proposição:**
+
 Dados $\{X_i\}, i \geq 1$, NPA's exponenciais unitários independentes.
 
 $N :=$ "maior inteiro tal que $\sum_{i = 1}^N X_i \leq \lambda$".
@@ -90,12 +98,12 @@ $N :=$ "maior inteiro tal que $\sum_{i = 1}^N X_i \leq \lambda$".
 		lambda
 	
 	1: Faça-se S1 = 0
-	2: Para i = 1, 2, ..., enquanto Si <= 1
-		(a) gerar Ti ~ Exponencial
+	2: Para i = 1, 2, ..., enquanto Si <= lambda
+		(a) gerar Ti ~ Exponencial(1)
 		(b) Seja Si = T1 + ... + Ti
 		
 	Saída:
-		N := min(Si > 1) - 1
+		N := min(Si > lambda) - 1
 		
 Propriedade da distribuição Exponencial:
 $$
@@ -121,11 +129,12 @@ plot(table(x) / n)
 ```
 
 
-### Modelo de Rejeição - Modelo Truncado
+### Modelo de Rejeição -- Modelo Truncado
 
 **Definição (Variável Aleatória Truncada):**
+
 Seja $X$ uma v.a. com f.d. $F(\cdot)$ e f.d.p. $f(\cdot)$.
-A v.a., definida por
+A v.a. definida por
 $$
 	X_{[a, b]} := X \mid a \leq X \leq b
 $$
@@ -137,16 +146,19 @@ para $x \in [a, b]$.
 
 
 #### Geração de um modelo truncado
+
 **Algoritmo:**
 
 	Repita
-		gerar x NPA com f.d. F()
-		até que x in [a, b]
+		gerar X NPA com f.d. F()
+		até que X in [a, b]
 		
 	Saída
-		xab := x
+		Xab := X
+
 
 **Exemplo:**
+
 NPA's N(0, 1) truncadas em [a, b]
 ```{r}
 a <- -3
@@ -181,12 +193,12 @@ As únicas restrições que pensamos impor são
 2. Há uma constante $M$ com $\frac{f(x)}{g(x)} \leq M,\ \forall x$.
 
 Nesse caso, $X$ pode ser simulado da seguinte forma:
-geramos $V \sim g$ e, independentemente, geramos $U \sim U[0, 1]$. Se
+geramos $Y \sim g$ e, independentemente, geramos $U \sim U[0, 1]$. Se
 $$
 	U \leq \frac{1}{M} \frac{f(Y)}{g(Y)},
 $$
 então $X = Y$.
-Se a desigualdade nãp for satisfeita, descartamos $Y$.
+Se a desigualdade não for satisfeita, descartamos $Y$.
 
 **Algortimo (Aceitação-Rejeição)**
 
@@ -194,19 +206,14 @@ Se a desigualdade nãp for satisfeita, descartamos $Y$.
 	2. Aceita X = Y se U <= 1/M * f(Y)/g(Y)
 	3. Retoma para 1 caso contrário
 
-$$
-	P\left(Y \leq x \mid U \leq \frac{1}{M} \frac{f(Y)}{g(Y)}\right) = P(X \leq x) \\
-$$ $$
-	= \frac{P(Y \leq x, U \leq \frac{1}{M} \frac{f(Y)}{g(Y)})}{P(U \leq \frac{1}{M} \frac{f(Y)}{g(Y)})}
-$$ $$
-	= \frac{\int_{-\infty}^x \int_0^{\frac{1}{M} \frac{f(Y)}{g(Y)}} du\ g(y)\ dy}{\int_{-\infty}^\infty \int_0^{\frac{1}{M} \frac{f(Y)}{g(Y)}} du\ g(y)\ dy}
-$$
-$$
-	= \frac{\int_{-\infty}^x \frac{1}{M} \frac{f(Y)}{g(Y)} g(y)\ dy}{\int_{-\infty}^{\infty} \frac{1}{M} \frac{f(Y)}{g(Y)} g(y)\ dy}
-$$
-$$
-	= \frac{\int_{-\infty}^x f(y)\ dy}{\int_{-\infty}^\infty f(y)\ dy} = P(X \leq x)
-$$
+\begin{align}
+	P\left(Y \leq x \mid U \leq \frac{1}{M} \frac{f(Y)}{g(Y)}\right) &= P(X \leq x) \\
+	&= \frac{P(Y \leq x, U \leq \frac{1}{M} \frac{f(Y)}{g(Y)})}{P(U \leq \frac{1}{M} \frac{f(Y)}{g(Y)})} \\
+	&= \frac{\int_{-\infty}^x \int_0^{\frac{1}{M} \frac{f(Y)}{g(Y)}} du\ g(y)\ dy}{\int_{-\infty}^\infty \int_0^{\frac{1}{M} \frac{f(Y)}{g(Y)}} du\ g(y)\ dy} \\
+	&= \frac{\int_{-\infty}^x \frac{1}{M} \frac{f(Y)}{g(Y)} g(y)\ dy}{\int_{-\infty}^{\infty} \frac{1}{M} \frac{f(Y)}{g(Y)} g(y)\ dy} \\
+	&= \frac{\int_{-\infty}^x f(y)\ dy}{\int_{-\infty}^\infty f(y)\ dy} = P(X \leq x)
+\end{align}
+
 
 **Exemplo:**
 Gerar de uma Beta($\alpha$, $\beta$)
@@ -217,13 +224,15 @@ Distribuição candidata: U[0, 1]
 $M?$ no R, pois achamos $M$ podemos fazer o seguinte
 ```{r}
 optimize(f = function(x){dbeta(x, 2.7, 6.3)}, interval = c(0, 1), maximum = TRUE)$objective
+```
 
+```{r}
 Nsim <- 2500
 a <- 2.7
 b <- 6.3
 M <- 2.7
 
-u <- runif(Nsim, max = M)
+u <- runif(Nsim, max = M)  # M * U[0, 1]
 y <- runif(Nsim)
 
 x <- y[u < dbeta(y, a, b)]
