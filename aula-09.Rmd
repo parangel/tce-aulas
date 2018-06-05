@@ -1,0 +1,191 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output:
+  pdf_document: default
+  html_notebook: default
+date: "9 de Maio de 2018"
+---
+	
+# Aula 9
+
+## Estimação por MV
+
+$$
+	f(x \mid \theta), \quad \Theta \subseteq \mathbb{R} ^ k
+$$
+
+- A ideia é calcular o valor de $\theta$ que maximiza a verossimilhança;
+
+- $\mathbf{X} = (X_1, X_2, \dotsc, X_n)$ a.a. proveniente de uma população $f(x \mid \theta)$;
+
+- Função de verossimilhança (EMV) de $\theta$ de uma amostra observada $\mathbf{x} = (x_1, x_2, \dotsc, x_n)$.
+\begin{align}
+	\hat{\theta} &= T(\mathbf{x}) = \mathrm{arg\ max} L(\theta \mid \mathbf{x}) \\
+	\hat{\theta} &= T(\mathbf{x}) = \mathrm{arg\ max} \log L(\theta \mid \mathbf{x})
+\end{align}
+
+Para $\theta$ esclar ($k = 1$) e sob condições de regularidade.
+O máximo é obtido como solução da equação de verossimilhança.
+\begin{align}
+	\frac{\mathrm{d}}{\mathrm{d}\theta} \log L(\theta \mid \mathrm{x}) \\
+	\frac{\mathrm{d}}{\mathrm{d}\theta} L^*(\theta \mid \mathbf{x}) = 0
+\end{align}
+
+Por vezes, não existe solução analítica, e procedimentos são utilizadis.
+
+
+**Exemplo:**
+
+EMV usando a função ``mle`` do pacote ``stats4`` do R.
+
+\begin{align}
+	f(x \mid \theta) &= \theta e ^ {-\theta x}, \quad x > 0 \quad \hat{\theta} = ? \\
+	L(\theta \mid \mathrm{x}) &= \prod_{i = 1}^n \theta e ^ {-\theta x_i} \\
+	\ell = \log L(\theta \mid \mathrm{x}) &= \sum_{i = 1}^n \log \left( \theta e ^ {-\theta x_i} \right) = n \log (\theta) - \theta \sum_{i = 1}^n x_i
+\end{align}
+
+$$
+	\hat{\theta} = \frac{n}{\sum_i x_i}
+$$
+\begin{align}
+	\frac{\partial}{\partial \theta} \ell &= \frac{n}{\theta} - \sum_i x_i = 0 \\
+	\Rightarrow \hat{\theta}^{-1} &= \frac{\sum_i x_i}{n} \\
+	\hat{\theta} &= \frac{n}{\sum_i x_i} = \frac{1}{\bar{x}}
+\end{align}
+
+```{r}
+n <- 30
+theta <- 2.5
+
+x <- rexp(n, rate = theta)
+
+mlogL <- function(theta) {
+	return(-(length(x) * log(theta) - theta * sum(x)))
+}
+
+library("stats4")
+
+fit <- mle(mlogL, start = list(theta = 1))
+summary(fit)
+
+cat("O inverso da média é", 1 / mean(x))
+```
+
+```{r}
+n <- 30
+theta <- 2.5
+
+x <- rexp(n, rate = theta)
+
+logL <- function(theta) {
+	return(length(x) * log(theta) - theta * sum(x))
+}
+theta <- seq(0, 10, 0.1)
+
+plot(theta, logL(theta), type = "l")
+
+optimize(logL, lower = 2, upper = 6, maximum = TRUE)
+
+cat("O inverso da média é ", mean(x))
+
+```
+
+```{r}
+n <- 30
+theta <- 2.5
+
+x <- rexp(n, rate = theta)
+
+dlogL <- function(theta) {
+	return(length(x) / theta - sum(x))
+}
+
+theta <- seq(0, 10, 0.01)
+
+plot(theta, dlogL(theta), type = "l")
+abline(h = 0, col = "grey")
+
+
+uniroot(dlogL, lower = 1, upper = 3)
+cat("O inverso da média é", 1 / mean(x))
+```
+
+
+**Exemplo:**
+
+Gamma($\alpha, \lambda$) usando ``uniroot``
+$$
+	\boldsymbol{\theta} = (\alpha, \lambda), \quad f(x \mid \boldsymbol{\theta}) = \frac{\lambda ^ \alpha}{\Gamma(\alpha)} x ^ {\alpha - 1} e ^ {-\lambda x}
+$$
+$$
+	\log L^* (\alpha, \lambda \mid \mathbf{x}) = n \alpha \log(\lambda) - n \log (\Gamma(\alpha)) + (\alpha - 1) \sum_i \log(x_i) - \lambda \sum_i x_i
+$$
+
+As soluções $(\hat{\alpha}, \hat{\lambda})$ do sistema de equações de máxima verossimilhança
+\begin{align}
+	\frac{\partial}{\partial \lambda} L^*(\alpha, \lambda \mid \mathrm{x}) &= \frac{n \alpha}{\lambda} - \sum_i x_i = 0 \\
+	\frac{\partial}{\partial \alpha} L^*(\alpha, \lambda \mid \mathrm{x}) &= n \log(\lambda) - \frac{n \Gamma'(\alpha)}{\Gamma(\alpha)} + \sum_i \log (x_i) = 0
+\end{align}
+
+\begin{align}
+	& \Rightarrow \alpha = \lambda \bar{x} \\
+	& \Rightarrow \log(\lambda) + \frac{1}{n} \sum_i \log(x_i) = \psi(\lambda \bar{x}), 
+\end{align}
+
+em que $\psi(\cdot)$ é a função digamma.
+
+**EMV do Gamma($\alpha, \lambda$) usando ``optim``**
+
+```{r}
+nrep <- 2000
+n    <- 200
+est  <- matrix(0, nrep, 3)
+
+alpha <- 5
+lambda <- 2
+
+dlogL <- function(lambda) {
+	return(log(lambda) + mean(log(x)) - digamma(lambda * mean(x)))
+}
+
+set.seed(1733)
+for (i in 1:nrep) {
+	x <- rgamma(n, shape = alpha, rate = lambda)
+	raiz <- uniroot(dlogL, lower = 0.001, upper = 1e7)
+	est[i, 1] <- raiz$root
+	est[i, 2] <- raiz$root * mean(x)
+	est[i, 3] <- raiz$iter
+}
+
+hist(est[, 1], freq = FALSE)
+abline(v = lambda, col = "red")
+
+hist(est[, 2], freq = FALSE)
+abline(v = alpha, col = "red")
+
+plot(table(est[, 3]) / nrep)
+
+```
+
+```{r}
+LL <- function(theta, sx, slogx, n) {
+	alpha <- theta[1]
+	lambda <- theta[2]
+	loglik <- n * alpha * log(lambda) - n * log(gamma(alpha)) + (alpha - 1) * slogx - lambda * sx
+	return(-loglik)
+}
+
+n <- 200
+alpha <- 5
+lambda <- 2
+x <- rgamma(n, shape = alpha, rate = lambda)
+
+optim(par = c(1, 1), fn = LL, sx = sum(x), slog = sum(log(x)), n = n)
+
+est <- replicate(2000, expr = {
+	x <- rgamma(200, shape = 5, rate = 2)
+	optim(c(1, 1), fn = LL, sx = sum(x), slogx = sum(log(x)), n = n)$par
+})
+colMeans(t(est))
+```
+
