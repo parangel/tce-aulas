@@ -1,0 +1,209 @@
+---
+title: "Técnicas Computacionais em Estatística"
+output:
+  pdf_document: default
+  html_notebook: default
+date: "16 de Maio de 2018"
+---
+
+# Aula 10
+
+## Algoritmos Iterativos
+
+1. Método gradiente (precisa das derivadas parciais da função objetivo)
+
+	steepest descent, Newton-Raphson, Fisher scoring
+	
+2. Método de Busca direta
+
+	Nelder-Mead, Quasi-Newton, Gradiente conjugado, Simulated Annealing
+	
+3. EM
+
+
+### Método Newton-Raphson (NR)
+
+Para o caso uniparamétrico, isto é, $\theta \in \Theta \subseteq \mathbb{R}$, os métodos iterativos buscam a raíz $\theta^*$ da equação $h(\theta) = 0$.
+
+Podemos reescrever como $\theta = g(\theta)$, em que $g(\cdot)$ goza de determinadas propriedades.
+Então é possível a partir de uma aproximação inicial $\theta_0$ bem próxima de $\theta^*$, ter uma sucessão de iterações $\theta_i$, $i = 1, 2, \dotsc$ que convergem para a raíz $\theta^*$ de forma recursiva $\theta_i = g(\theta_{i - 1}$.
+
+No caso do método NR
+$$
+	\theta_i = g(\theta_{i - 1}) = \theta_{i - 1} - \frac{h(\theta_{i - 1})}{h'(\theta_{i - 1})}, \quad
+	(\theta_i - \theta_{i - 1}) < \epsilon.
+$$
+
+Justificação:
+
+- Se $\theta_0$ for uma aproximação incial da solução $\theta^*$ da equação $h(\theta) = 0$;
+
+- $h$ é diferenciável;
+
+- Desenvolver uma expressão de Taylor em torno de $\theta_0$:
+$$
+	h(\theta) = 0 = h(\theta_0) + h'(\theta_0)(\theta - \theta_0)
+$$
+$$
+	\frac{-h(\theta_0)}{h'(\theta_0)} = (\theta - \theta_0)
+$$
+$i = 1$
+$$
+	\theta_1 = \theta_0 - \frac{h(\theta_0)}{h'(\theta_0)},\ |\theta_i - \theta_{i - 1}| < \epsilon \quad
+	\dots \quad
+	\theta_i = \theta_{i - 1} - \frac{h(\theta_{i - 1})}{h'(\theta_{i - 1})}
+$$
+
+
+### Algoritmo EM
+
+Algoritmo EM (*Expectation Maximization*) permite calcular as estimatias de MV na presença de variáveis não-observadas.
+Trata-se de um método de ampliação dos dados, os dados obsservados são ampliados com dados latentes (não-observados).
+
+Considera-se:
+
+- O vetor $\mathbf{Y}$ descreve as variáveis observadas.
+
+- O vetor $\mathbf{Z}$ descreve as variáveis não observadas ou latentes.
+
+- $\theta$ é o parâmetro a ser estimado da distribuição conjunta de $(\mathbf{Y}, \mathbf{Z})$, amostra ampliada.
+
+- O parâmetro $\theta$ tem por verossimilhança a função $L(\theta \mid \mathbf{y}, \mathbf{z})$, isto é, $L(\theta \mid \mathbf{y}, \mathbf{z}) = f(\mathbf{y}, \mathbf{z} \mid \theta)$.
+
+- O algoritmo EM pode ser usado em situações onde a estrutura dos dados sugere a existência de dados omissos, dados censurados, e mistura de distribuições.
+
+O obetivo é estimar $\theta$, dado $\mathbf{Y} = \mathbf{y}$, maximizando
+$$
+	L(\theta \mid \mathbf{y}) = f(\mathbf{y} \mid \theta) =
+	\int f(\mathbf{y}, \mathbf{z} \mid \theta)\ \mathrm{d}\mathbf{z} =
+	\int L(\theta \mid \mathbf{y}, \mathbf{z})\ \mathrm{d}\mathbf{z}.
+$$
+
+Uma vez que a amostra ampliada $(\mathbf{Y}, \mathbf{Z}) \sim f(\mathbf{z}, \mathbf{y} \mid \theta)$, a dsitribuição condicional de $\mathbf{Z} \mid \theta, \mathbf{y}$ é
+$$
+	f(\mathbf{z} \mid \theta, \mathbf{y}) = \frac{f(\mathbf{z}, \mathbf{y} \mid \theta)}{f(\mathbf{y} \mid \theta)} 
+$$
+e tomando o log, obtem-se a seguinte relação entre
+
+- a verossimilhança da amostra completa $L^C(\theta \mid \mathbf{z}, \mathbf{y})$;
+
+- a verossimilhança dos dados observados $L(\theta \mid \mathbf{y})$.
+
+Para qualquer $\theta_0$:
+$$
+	\log L(\theta \mid \mathbf{y}) = E_{\theta_0}[\log(L^C(\theta \mid \mathbf{z}, \mathbf{y}))]
+$$
+em que o valor esperado é em relação a $\mathbf{Z} \mid \theta_0, \mathbf{y} \sim f(\mathbf{z} \mid \theta_0, \mathbf{y})$.
+
+
+**Defina:** (valor esperado da log-verossimilhança dos dados completos)
+$$
+	Q(\theta \mid \theta_0, \mathbf{y}) = E_{\theta_0}[\log(L^C(\theta \mid \mathbf{z}, \mathbf{y}))]
+$$
+
+
+---
+
+#### Algoritmo
+
+**Input:**
+estimativa inicial $\hat{\theta}_0$
+	
+**Output:**
+sequência de $\hat{\theta}_i$, $i = 1, 2, \dotsc$ de estimativas para $\theta$
+
+**Passo E (*Expectation*)**
+
+$Q(\theta \mid \hat{\theta}_i, \mathbf{y}) = E_{\hat{\theta}_i}[\log L^C(\theta \mid \mathbf{z}, \mathbf{y})]$: valor esperado com respeito a $\mathbf{Z} \mid \theta_i, \mathbf{y}$ com fdp $f(\mathbf{z} \mid \hat{\theta}_i, \mathbf{y})$
+
+**Passo M (*Maximization*)**
+
+$\hat{\theta}_{i + 1} = \mathrm{arg\ max}\ Q(\theta \mid \hat{\theta}_i, \mathbf{y})$ e faça-se $i = i + 1$, até que $\hat{\theta}_{i + 1} = \hat{\theta}_i$ para determinada precisão.
+
+---
+
+- Mostra-se que (pela desigualdade de Jensen)
+$$
+	L(\hat{\theta}_{i + 1} \mid \mathrm{y}) \geq L(\hat{\theta}_{i} \mid \mathrm{y}),
+$$
+todo o ponto limite da sequência EM $\{\hat{\theta}_i\}$ é um ponto de estacionariedade de $L(\theta \mid \mathrm{y})$, embora não necessariamente o EMV ou até o máximo local.
+
+- Isto, na prática, significa que se deve correr o algoritmo EM para diversos pontos iniciais escolhidos aleatoriamente.
+
+- Este é o único elemento de aleatoriedade envolvida no algoritmo EM, uma vez que usando o mesmo ponto inicial $\hat{\theta}_0$ conduz ao mesmo valor.
+
+
+**Exemplo: (Dados com censura tipo I)**
+
+Suponhamos que se dispõe de um aparelho de medida (cm) da altura de $n$ indivíduos, com uma trena de metal que só deixa medir $M$ indivíduos até $a$, sendo os restantes $n - M$ retirados da barra de metal em virtude da sua altura ser superior a $a$.
+
+Considere-se que a característica de interesse tem fdp $N(\theta, 1)$
+$$
+	\phi(y - \theta) = \frac{1}{\sqrt{2 \pi}} \exp\{ -(y - \theta) ^ 2 / 2 \}
+$$
+
+Dado $M = m$, estimar $\theta$ pelo algoritmo EM.
+
+Suponhamos que se observam $Y_1, Y_2, \dotsc, Y_m$ iid de $f(y - \theta) = \phi(y - \theta)$ e que as $Y_{m + 1}, \dotsc, Y_n$ censuradas ao nível $a$.
+
+$\mathbf{y} = (y_1, \dotsc, y_m)$ observadas e $\mathbf{z} = (z_{m + 1}, \dotsc, z_n)$ censuradas.
+
+\begin{align}
+	L^C(\theta \mid \mathbf{y}, \mathbf{z}) &= \prod_{i = 1}^{m} f(y_i - \theta) \times \prod_{i = m + 1}^{n} f(z_i - \theta) \\
+	L^C(\theta \mid \mathbf{y}, \mathbf{z}) &= \prod_{i = 1}^{m} \phi(y_i - \theta) \times \prod_{i = m + 1}^{n} \phi(z_i - \theta)
+\end{align}
+
+$$
+	E[L^C(\theta \mid \mathbf{y}, \mathbf{z})] = \int_{\mathbb{R}} L^C(\theta \mid \mathbf{y}, \mathbf{z}) f(\mathbf{z} \mid \mathbf{y}, \theta)\ \mathrm{d}\mathbf{z}
+$$
+com $f(\mathbf{z} \mid \mathbf{y}, \theta)$ sendo a densidade dos dados faltantes considerando os dados observados.
+
+$Z = T \mid T > a$,
+$$
+	f(z \mid y, \theta) = f(z - \theta) = \phi(z - \theta), \quad z > a.
+$$
+
+**Algoritmo EM**
+
+E:
+\begin{align}
+	Q(\theta \mid \theta_0, \mathbf{y}) &= E_{\theta_0}\left[ \log L^C(\theta \mid \mathbf{y}, \mathbf{Z}) \right] \\
+	&\propto E_{\theta_0}\left[ \frac{-1}{2} \sum_{i = 1}^{m} (y_i - \theta)^2 - \frac{1}{2}\sum_{i = m + 1}^n (Z_i - \theta)^2 \right] \\
+	&= \frac{-1}{2} \sum_{i = 1}^{m} (y_i - \theta)^2 - \frac{1}{2}\sum_{i = m + 1}^n E_{\theta_0} (Z_i - \theta)^2
+\end{align}
+
+M:
+$$
+	\frac{\partial Q(\theta \mid \theta_0, y)}{\partial \theta} = 0 \Rightarrow \hat{\theta} = \frac{m\bar{y} + (n - m) E_{\theta_0}(Z)}{n}
+$$
+$$
+	\theta_{i + 1} = \frac{m \bar{y}}{n} + \frac{n - m}{n} \left[ \hat{\theta}_i + \frac{\phi(a - \hat{\theta}_i)}{1 - \Phi(a - \hat{\theta_i})} \right]
+$$
+
+```{r}
+a <- 170
+n <- 300
+theta <- 168
+
+set.seed(2017)
+x <- rnorm(n, theta, 1)
+
+y <- x[x < a]
+
+m <- length(y)
+ybar <- mean(y)
+sdy <- sd(y)
+
+i <- 1
+vtheta <- numeric()
+vtheta[i] <- rnorm(1, mean = ybar, sd = sdy)
+nostop <- TRUE
+while (nostop) {
+	vtheta[i + 1] <- ((m * ybar) / n) + 
+		((n - m) / n) * (vtheta[i] + (dnorm(a - vtheta[i]) / (1 - pnorm(a - vtheta[1]))))
+	i <- i + 1
+	cat("Theta[", i ,"] = ", vtheta[i], "\n", sep = "")
+	nostop <- abs(vtheta[i] - vtheta[i - 1]) > 1e-5
+}
+```
+
